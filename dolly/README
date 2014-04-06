@@ -1,0 +1,50 @@
+Motorized moving timelapse camera dolly with Arduino.
+
+Parts
+- Arduino nano
+- Stepping motor driver board
+- 4pcs LM16UU 16mm Linear Ball Bearing Bush Bushing
+- 2 pcs 16mm steel pipes (trail for camera)
+- Timing Belt + Timing Pulley
+- 2pcs End switches
+- 2x16 LCD Module Display
+- 4pcs Push Button Switch
+- Nema 17 step motor
+
+
+|-----||                   --------                      ||
+|Step ||End                |Camera|                   End||
+|motor||-------belt&rail---|      |-----belt&rail--------||
+|-----||switch             |      |                switch||
+      ||                   --------                      ||
+      |   <--------     Camera is moving       --------->
+      |
+ ---------   
+ |Control|
+ | Board |
+ ---------
+     |
+ ---------   
+ |Battery|
+ |       |
+ ---------
+
+
+Menu
+- Start/Stop 
+- Setup
+    - Set distance 
+    - Set direction 
+    - Camera FPM
+        - Camera FPM (Frames per minute)
+    - Time (minute)
+        - Setup-Moving-time
+    - Time (hour)
+        - Setup-Moving-time
+    - ProjectionFPS
+        - FPS (Frames per second)
+    - Calibrate 
+    - Exit
+- Go Home 
+- SaveToEEPROM 
+- Exit
