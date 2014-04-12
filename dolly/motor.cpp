@@ -8,6 +8,8 @@ unsigned long  steps;
 unsigned int dir;
 unsigned long  stepCount;
 
+char disable_interrupt = 0;
+
 enum motor_tasks{GOHOME, CALIBRATE, MOVE, IDLE};
 enum motor_tasks motor_task = IDLE;
 int motor_task_helper = 0;
@@ -49,11 +51,24 @@ void initializeMotor()
    // attachInterrupt(TIMER2, moveMotor, CHANGE);
  
 }
-
+char disable_motor_interrupt()
+{
+  disable_interrupt = 1;
+  return 0;
+}
+char enable_motor_interrupt()
+{
+  disable_interrupt = 0;
+  return 0;
+}
 ISR(TIMER2_OVF_vect) {
-  TCNT2 = 233;
+      TCNT2 = 233;
+  if(disable_interrupt==0)
+  {
+
   moveMotor();
   run_motor_tasks();
+  }
 }
 
 char leftLimitSwitch()
@@ -74,26 +89,25 @@ char rigthLimitSwitch()
     #endif    
 }
 
-char step(char dir)
+char one_step_motor(char _dir)
 {
   static char i=0;
   i++;
-
-  if(leftLimitSwitch() && !dir)
+  if(leftLimitSwitch() && !_dir)
   {
       return 2;
   }
 
-  if(rigthLimitSwitch() && dir)
+  if(rigthLimitSwitch() && _dir)
   {
       return 1;
   }
 
   
   #if INVERT_DIR_PIN==0
-  digitalWrite(DIR_PIN, dir?HIGH:LOW);
+  digitalWrite(DIR_PIN, _dir?HIGH:LOW);
   #else
-  digitalWrite(DIR_PIN, dir?LOW:HIGH);
+  digitalWrite(DIR_PIN, _dir?LOW:HIGH);
   #endif
   digitalWrite(STEP_PIN, i&0x01?HIGH:LOW);
   digitalWrite(STEP_PIN, i&0x02?HIGH:LOW);
@@ -101,20 +115,39 @@ char step(char dir)
   return 0;
 }
 
+void motor_enable()
+{
+  #if INVERT_ENABLE_PIN==0
+  digitalWrite(ENABLE_PIN, HIGH);
+  #else
+  digitalWrite(ENABLE_PIN, LOW);
+  #endif   
+}
+
+void motor_disable()
+{
+    #if INVERT_ENABLE_PIN==0
+    digitalWrite(ENABLE_PIN, LOW);
+    #else
+    digitalWrite(ENABLE_PIN, HIGH);
+    #endif 
+}
+char manualStepMotor(char _dir)
+{
+  motor_task=IDLE; 
+  return one_step_motor(_dir); 
+}
+
 void moveMotor()
 {
   if(motor_task!=IDLE)
   {
-    #if INVERT_ENABLE_PIN==0
-    digitalWrite(ENABLE_PIN, HIGH);
-    #else
-    digitalWrite(ENABLE_PIN, LOW);
-    #endif 
+    motor_enable();
   }
   
   if(steps>0)
   {
-    char ret = step(dir); 
+    char ret = one_step_motor(dir); 
     if(ret==1)
     {
       steps=0;
@@ -132,11 +165,7 @@ void moveMotor()
   
   if(motor_task==IDLE)
   {
-    #if INVERT_ENABLE_PIN==0
-    digitalWrite(ENABLE_PIN, LOW);
-    #else
-    digitalWrite(ENABLE_PIN, HIGH);
-    #endif 
+    motor_disable();
   }
 }
 

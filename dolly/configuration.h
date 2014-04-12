@@ -17,6 +17,8 @@ struct configuration{
     int projectionFrameRate; //frame per second 
     
     char calibrated;
+    
+    int dolly_time; //second from side to side
 };
 
 extern struct configuration conf;

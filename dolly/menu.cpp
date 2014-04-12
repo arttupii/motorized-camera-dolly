@@ -534,6 +534,67 @@ int setupMenu(int state)
     return 0;
 }
 
+int startMotion5min()
+{
+  unsigned long time = conf.dolly_time;
+  char buffer[17];
+  while(1)
+  {
+    lcdPrint(0, "Dolly-Set time");
+    int ch = getKey();    
+    switch(ch)
+    {
+            case LCD_KEY_UP: time+=5; break;
+            case LCD_KEY_DOWN: time-=5; break;
+            case LCD_KEY_BACK: return 0;
+            case LCD_KEY_SELECT:
+              {
+                lcdPrint(0, "- Dolly -");
+              char dir = conf.fromLeftToRight?0:1;
+              lcdPrint(1, "To home...");
+              move_motor(0xffffffff,dir?0:1);
+              while(isMotorIdle()==0);
+              
+              disable_motor_interrupt();
+              motor_enable();
+              unsigned long d = (time*1000*1000)/conf.stepFromSideToSide;
+              
+              
+              lcdPrint(1, "Running...");
+              unsigned long u = micros();
+              
+              while(1)
+              {
+                ch = getKey();
+                if(ch==LCD_KEY_BACK) break;
+                
+                if(u+d<=micros())
+                {
+                  u=micros();
+                  if(dir)
+                    {if(manualStepMotor(1)==1) break;}
+                  else
+                    {if(manualStepMotor(0)==2) break;}
+                }
+              }
+              
+              motor_disable();
+              enable_motor_interrupt();
+              return 0;
+              }
+    };
+
+    
+    sprintf(buffer,"%d s", time);
+    lcdPrint(1, buffer);
+    
+    if(time<10) time=60*5;
+    if(time>60*5)time = 10;
+  
+    conf.dolly_time = time;    
+  }
+    return 0;  
+}
 int mainMenu(int i)
 {
     lcdPrint(0, "MENU");
@@ -574,6 +635,22 @@ int mainMenu(int i)
             }
             break;
         case 1: 
+	    if(db.isStarted==0)
+	      lcdPrint(1, " Start as Dolly");
+            if(ch==LCD_KEY_SELECT)
+            {
+                if(isMotorCalibrated()!=0)
+                {
+		  startMotion5min();
+                }
+                else
+                {   
+                    notification("Motor has not", "been calibrated!");
+                    return 0;
+                }
+            }
+            break;
+        case 2: 
 	  if(db.isStarted==0)
 	  {
             lcdPrint(1, " Setup"); 
@@ -587,14 +664,14 @@ int mainMenu(int i)
 	  {
 	    lcdPrint(1, "-------");
 	  }
-        case 2: 
+        case 3: 
             lcdPrint(1, " Go Home"); 
             if(ch==LCD_KEY_SELECT)
             {
                 goHomeMotor();
             }
             break;
-        case 3:     
+        case 4:     
             lcdPrint(1, " SaveToEEPROM"); 
             if(ch==LCD_KEY_SELECT)
             {
@@ -602,7 +679,7 @@ int mainMenu(int i)
                notification("Done","");
             }
             break;
-        case 4:     
+        case 5:     
             lcdPrint(1, " Exit"); 
             if(ch==LCD_KEY_SELECT)
             {
@@ -613,9 +690,9 @@ int mainMenu(int i)
         {
             if(index<0)
             {
-                index=4;
+                index=5;
             }
-            if(index>4)
+            if(index>5)
 	    {
 	      index=0;
 	    }

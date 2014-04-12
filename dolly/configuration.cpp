@@ -19,6 +19,8 @@ void loadDefaults()
     
     conf.calibrated = 0;
  
+    conf.dolly_time = 10;
+ 
     db.isStarted = 0; //Timelapse is not started yet
     db.photoCount = 0;
      
