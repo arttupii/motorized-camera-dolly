@@ -571,19 +571,14 @@ int startMotion5min()
               
               
               lcdPrint(1, "Running...");
-              unsigned long nextStepTick = micros() + microsPerStep;
-              int overflowFlag = 0;
+              unsigned long nextStepTick = micros();
               while(1)
               {
                 ch = getKey();
                 if(ch==LCD_KEY_BACK) break;
-              
-                if( (!overflowFlag)&&(nextStepTick<=micros()) || 
-                      overflowFlag&&((nextStepTick+microsPerStep)<=(micros()+microsPerStep)))
+
+                if( ((unsigned long)(micros()-nextStepTick))>=microsPerStep)
                 {
-                  overflowFlag = 0;
-                  if(nextStepTick>(nextStepTick+microsPerStep)) overflowFlag = 1;
-                  
                   nextStepTick+=microsPerStep;
                   if(dir)
                     {if(manualStepMotor(1)==1) break;}
