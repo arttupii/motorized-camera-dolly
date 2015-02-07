@@ -542,10 +542,20 @@ int startMotion5min()
   {
     lcdPrint(0, "Dolly-Set time");
     int ch = getKey();    
+    unsigned long timeChangeStep = 5; //5s
+    const unsigned long maxDollyTime = 3600*24*5;
+    if(time>=(60*5)) {
+      timeChangeStep = 3600; 
+    } else if(time>=60) {
+      timeChangeStep = 60;
+    } else {
+       timeChangeStep = 5; 
+    }
+    
     switch(ch)
     {
-            case LCD_KEY_UP: time+=5; break;
-            case LCD_KEY_DOWN: time-=5; break;
+            case LCD_KEY_UP: time+=timeChangeStep; break;
+            case LCD_KEY_DOWN: time-=timeChangeStep; break;
             case LCD_KEY_BACK: return 0;
             case LCD_KEY_SELECT:
               {
@@ -557,20 +567,24 @@ int startMotion5min()
               
               disable_motor_interrupt();
               motor_enable();
-              unsigned long d = (time*1000*1000)/conf.stepFromSideToSide;
+              unsigned long microsPerStep = (time*1000*1000)/conf.stepFromSideToSide;
               
               
               lcdPrint(1, "Running...");
-              unsigned long u = micros();
-              
+              unsigned long nextStepTick = micros() + microsPerStep;
+              int overflowFlag = 0;
               while(1)
               {
                 ch = getKey();
                 if(ch==LCD_KEY_BACK) break;
-                
-                if(u+d<=micros())
+              
+                if( (!overflowFlag)&&(nextStepTick<=micros()) || 
+                      overflowFlag&&((nextStepTick+microsPerStep)<=(micros()+microsPerStep)))
                 {
-                  u=micros();
+                  overflowFlag = 0;
+                  if(nextStepTick>(nextStepTick+microsPerStep)) overflowFlag = 1;
+                  
+                  nextStepTick+=microsPerStep;
                   if(dir)
                     {if(manualStepMotor(1)==1) break;}
                   else
@@ -584,12 +598,18 @@ int startMotion5min()
               }
     };
 
+    if(time>=(60*5)) {
+      sprintf(buffer,"%d h", time/3600);
+    } else if(time>=60) {
+      sprintf(buffer,"%d min", time/60);
+    } else {
+      sprintf(buffer,"%d s", time);
+    }
     
-    sprintf(buffer,"%d s", time);
     lcdPrint(1, buffer);
     
     if(time<10) time=60*5;
-    if(time>60*5)time = 10;
+    if(time>maxDollyTime) time = maxDollyTime;
   
     conf.dolly_time = time;    
   }
