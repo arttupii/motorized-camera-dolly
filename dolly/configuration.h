@@ -1,7 +1,7 @@
 #ifndef __CONFIGURATION_H__
 #define __CONFIGURATION_H__
 
-#define VERSION 3
+#define VERSION 4
 
 struct configuration{
     int version;

@@ -543,7 +543,7 @@ int startMotion5min()
     lcdPrint(0, "Dolly-Set time");
     int ch = getKey();    
     unsigned long timeChangeStep = 5; //5s
-    const unsigned long maxDollyTime = 3600*24*5;
+    const unsigned long maxDollyTime = 60*60*24;
     if(time>=(60*5)) {
       timeChangeStep = 3600; 
     } else if(time>=60) {
@@ -603,7 +603,7 @@ int startMotion5min()
     
     lcdPrint(1, buffer);
     
-    if(time<10) time=60*5;
+    if(time<10) time=10;
     if(time>maxDollyTime) time = maxDollyTime;
   
     conf.dolly_time = time;    
